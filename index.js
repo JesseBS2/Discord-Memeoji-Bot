@@ -2,6 +2,8 @@ const Discord = require("discord.js");
 const Config = require("./config.json");
 const colors = require("colors");
 const fs = require("fs");
+const { APIMessage, Structures } = require("discord.js");
+
 
 var bot = new Discord.Client();
 var memes = require("./memeages.json");
@@ -371,35 +373,32 @@ bot.on("message", async message => {
       `<Imgur>`.green,
       after - before + "ms"
     );
-  } else if (
-    msg.startsWith(Config["meme-wrapper"]) &&
-    msg.endsWith(Config["meme-wrapper"])
-  ) {
+  } else if ( msg.startsWith(Config["meme-wrapper"]) && msg.endsWith(Config["meme-wrapper"]) ) {
+    
+    
     // sends an image into chat, typically with text on it.
 
     if (memes[msg.replace(/ /g, "_").replace(/\|/g, "")]) {
       var JSONMeme = memes[msg.replace(/ /g, "_").replace(/\|/g, "")];
       if (typeof JSONMeme == "object") {
-        channel.send(JSONMeme[Math.floor(Math.random() * JSONMeme.length)]);
+        message.inlineReply(JSONMeme[Math.floor(Math.random() * JSONMeme.length)]);
       } else {
-        channel.send(JSONMeme);
+        message.inlineReply(JSONMeme);
       }
     } else {
       channel.send("I couldn't find that meme in my database.");
     }
-  } else if (msg.split(";").length > 1) {
-    let emojiwrappers = msg.split(";");
+    
+    
+  } else if (msg.split(Config["emoji-wrapper"]).length > 1) {
+    let emojiwrappers = msg.split(Config["emoji-wrapper"]);
     var ToSend = "";
     var QueuedEmojis = [];
 
-    for (
-      var semicolons = 1;
-      semicolons < emojiwrappers.length;
-      semicolons += 2
-    ) {
+    for (var semicolons = 1; semicolons < emojiwrappers.length; semicolons += 2 ) {
       
       if(emojiwrappers.length % 2 == 0){
-        if(semicolons > emojiwrappers.length){
+        if(semicolons > emojiwrappers.length-2){
           console.log("Uneven semicolons");
           break;
         }
@@ -408,51 +407,62 @@ bot.on("message", async message => {
       
       if(emojiwrappers[semicolons - 1].length > 29 || emojiwrappers[semicolons - 1].split(" ").length > 1)
       ToSend += emojiwrappers[semicolons - 1] + " ";
-      if (semicolons > emojiwrappers) {
+      if (semicolons > emojiwrappers.length) {
         break;
       }
 
-      if (emojis[emojiwrappers[semicolons].replace(/ /g, "_")]) {
-        ToSend += emojis[emojiwrappers[semicolons].replace(/ /g, "_")] + " ";
-        QueuedEmojis.push(emojiwrappers[semicolons].replace(/ /g, "_"));
+      if (emojis[emojiwrappers[semicolons].replace(/ /g, "")]) {
+        ToSend += emojis[emojiwrappers[semicolons].replace(/ /g, "")] + " ";
+        QueuedEmojis.push(emojiwrappers[semicolons].replace(/ /g, ""));
       } else {
-        delete emojis[emojiwrappers[semicolons].replace(/ /g, "_")];
+        delete emojis[emojiwrappers[semicolons].replace(/ /g, "")];
         return channel.send("I couldn't find that emoji in my database.");
       }
+      
     }
 
+    
     var Response = await channel.send(ToSend);
 
     for (var i = 0; i < QueuedEmojis.length; i++) {
+
       if (
-        Response.content.includes(":" + QueuedEmojis[i] + ":") &&
+        Response.content.includes(
+          emojis[QueuedEmojis[i]].substring(
+            emojis[QueuedEmojis[i]].indexOf(":"), 
+            emojis[QueuedEmojis[i]].lastIndexOf(":")+1
+          )
+        ) &&
         Response.content.charAt(
-          Response.content.indexOf(":" + QueuedEmojis[i] + ":") - 1
+          Response.content.indexOf(
+            emojis[QueuedEmojis[i]].substring(
+              emojis[QueuedEmojis[i]].indexOf(":"), 
+              emojis[QueuedEmojis[i]].lastIndexOf(":")+1
+            )
+          ) - 1
         ) != "a" &&
         Response.content.charAt(
-          Response.content.indexOf(":" + QueuedEmojis[i] + ":") - 1
+          Response.content.indexOf(
+            emojis[QueuedEmojis[i]].substring(
+              emojis[QueuedEmojis[i]].indexOf(":"), 
+              emojis[QueuedEmojis[i]].lastIndexOf(":")+1
+            )
+          ) - 1
         ) != "<"
       ) {
-        Response.edit(
-          "Oops! I no longer have access to one or more of those emojis, I'll correct my list..."
-        );
+        
+        Response.edit("Oops! I no longer have access to one or more of those emojis, I'll correct my list...");
         delete emojis[QueuedEmojis[i]];
 
-        console.log(
-          "[Deleted Emoji]".bgBlue,
-          `Deleted :${QueuedEmojis[i].toString().yellow}:`
-        );
+        console.log("[Deleted Emoji]".bgBlue, `Deleted :${QueuedEmojis[i].toString().yellow}:`);
         SaveJSON(1);
         return;
       }
     }
 
     return;
-  } else if (
-    words[0] == Config["prefix"] + "reloadEmojis" &&
-    message.author.id in [596938492752166922]
-  ) {
-    console.log("[Reloading Server Emojis]".white.blue);
+  } else if (words[0] == Config["prefix"] + "reloadEmojis" && message.author.id == 596938492752166922) {
+    console.log("[Reloading Server Emojis]".bgWhite.blue);
 
     var ReloadMessage = await channel.send("Reloading The Servers... 0%");
     let loops = 0;
@@ -478,7 +488,7 @@ bot.on("message", async message => {
     return ReloadMessage.edit("Finished Reloading Servers");
   
   }else if(msg === "420" || msg === "69"){
-    return message.reply("Nice.");           
+    return message.inlineReply("Nice.");           
   }
 });
 
@@ -498,9 +508,7 @@ function ReloadServerEmojis(server) {
   let FoundEmojis = 0;
 
   server.emojis.cache.forEach(item => {
-    console.log(
-      item.name + ": https://cdn.discordapp.com/emojis/" + item.id + ".png?v=1"
-    );
+    console.log(item.name + ": https://cdn.discordapp.com/emojis/" + item.id + ".png?v=1");
     var AnimatedStart = ""; // Animated emojis start with an a before the rest of the input, so in this'll fill the slot before hand
 
     if (item.animated === true) AnimatedStart = "a";
@@ -508,7 +516,6 @@ function ReloadServerEmojis(server) {
       item.name in emojis &&
       emojis[item.name] == `<${AnimatedStart}:${item.name}:${item.id}>`
     ) {
-      console.log("Nothing A1");
       // nuthin
     } else if (
       item.name in emojis &&
@@ -520,11 +527,9 @@ function ReloadServerEmojis(server) {
           emojis[item.name + keepGoing.toString()] ==
             `<${AnimatedStart}:${item.name}:${item.id}>`
         ) {
-          console.log("Emoji in there, but with number");
           // that emoji is already in there, it just has a number on the end of it.
           break;
         } else {
-          console.log("Break B1");
           emojis[
             item.name + keepGoing.toString()
           ] = `<${AnimatedStart}:${item.name}:${item.id}>`;
@@ -544,3 +549,35 @@ function ReloadServerEmojis(server) {
     `Added ${FoundEmojis.toString().yellow} to emojimages.json`
   );
 }
+
+
+
+/* Thanks Allvaa on Github :D
+https://gist.github.com/Allvaa/0320f06ee793dc88e4e209d3ea9f6256 */
+class ExtAPIMessage extends APIMessage {
+    resolveData() {
+        if (this.data) return this;
+        super.resolveData();
+        const allowedMentions = this.options.allowedMentions || this.target.client.options.allowedMentions || {};
+        if (allowedMentions.repliedUser !== undefined) {
+            if (this.data.allowed_mentions === undefined) this.data.allowed_mentions = {};
+            Object.assign(this.data.allowed_mentions, { replied_user: allowedMentions.repliedUser });
+        }
+        if (this.options.replyTo !== undefined) {
+            Object.assign(this.data, { message_reference: { message_id: this.options.replyTo.id } });
+        }
+        return this;
+    }
+}
+
+class Message extends Structures.get("Message") {
+    inlineReply(content, options) {
+        return this.channel.send(ExtAPIMessage.create(this, content, options, { replyTo: this }).resolveData());
+    }
+
+    edit(content, options) {
+        return super.edit(ExtAPIMessage.create(this, content, options).resolveData());
+    }
+}
+
+Structures.extend("Message", () => Message);
