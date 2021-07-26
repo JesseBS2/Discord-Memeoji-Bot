@@ -1,0 +1,27 @@
+{
+  "name": "Memeoji Bot for Discord",
+  "version": "2.0.1-beta",
+  "description": "A Discord Bot that can take and distribute emojis/memes across all servers it is in. With no need for Discord Nitro!",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "discord.js": "^12.5.3",
+    "colors": "^1.4.0"
+  },
+  "engines": {
+    "node": "12.x"
+  },
+  "repository": {
+    "url": "https://glitch.com/edit/#!/glitch-hello-node"
+  },
+  "license": "MIT",
+  "keywords": [
+    "node",
+    "glitch",
+    "discord",
+    "bot",
+    "memes"
+  ]
+}
