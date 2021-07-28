@@ -9,7 +9,10 @@ var bot = new Discord.Client();
 var memes = require("./memeages.json");
 var emojis = require("./emojimages.json");
 
+
 bot.login(fs.readFileSync("./token.txt", "utf8").toString());
+
+
 
 bot.on("ready", () => {
   console.log("Memeoji Bot V2".magenta);
@@ -24,9 +27,13 @@ bot.on("ready", () => {
   });
 });
 
+
+
 bot.on("guildCreate", guild => {
   ReloadServerEmojis(guild);
 });
+
+
 
 bot.on("guildDelete", peasants => {
   let RemovedEmojis = 0;
@@ -55,27 +62,19 @@ bot.on("guildDelete", peasants => {
 
   SaveJSON(1);
 
-  return console.log(
-    `[Removed from Server] <${peasants.name}/${peasants.id}>`.cyan,
-    `Removed ${RemovedEmojis.toString().yellow} from emojimages.json`
-  );
+  return console.log(`[Removed from Server] <${peasants.name}/${peasants.id}>`.cyan, `Removed ${RemovedEmojis.toString().yellow} from emojimages.json`);
 });
+
+
 
 bot.on("emojiCreate", newemoji => {
   var AnimatedStart = "";
   if (newemoji.animated === true) AnimatedStart = "a";
 
-  if (
-    newemoji.name in emojis &&
-    emojis[newemoji.name] ==
-      `<${AnimatedStart}:${newemoji.name}:${newemoji.id}>`
-  ) {
+  if (newemoji.name in emojis && emojis[newemoji.name] == `<${AnimatedStart}:${newemoji.name}:${newemoji.id}>`) {
     return; // pretty sure this check will never be true but... eh
-  } else if (
-    newemoji.name in emojis &&
-    emojis[newemoji.name] !=
-      `<${AnimatedStart}:${newemoji.name}:${newemoji.id}>`
-  ) {
+  } else if (newemoji.name in emojis && emojis[newemoji.name] != `<${AnimatedStart}:${newemoji.name}:${newemoji.id}>`) {
+    
     for (let keepGoing = 1; keepGoing < 420; keepGoing++) {
       if (!(newemoji.name + keepGoing.toString() in emojis)) {
         emojis[
@@ -84,10 +83,9 @@ bot.on("emojiCreate", newemoji => {
         break;
       }
     }
+    
   } else {
-    emojis[
-      newemoji.name
-    ] = `<${AnimatedStart}:${newemoji.name}:${newemoji.id}>`;
+    emojis[newemoji.name] = `<${AnimatedStart}:${newemoji.name}:${newemoji.id}>`;
   }
 
   SaveJSON(1);
@@ -119,51 +117,30 @@ bot.on("emojiUpdate", (emojiold, emojiupd) => {
         )
       ]
     ];
-    emojis[
-      emojiupd.name
-    ] = `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`;
-  } else if (
-    emojiold.name in emojis &&
-    emojis[emojiold.name] !=
-      `<${AnimatedStart}:${emojiold.name}:${emojiold.id}>`
-  ) {
+    emojis[emojiupd.name] = `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`;
+  } else if (emojiold.name in emojis && emojis[emojiold.name] != `<${AnimatedStart}:${emojiold.name}:${emojiold.id}>`) {
     //console.log("[Testing]".bgYellow.white, "Case 2: emoji name is in json but is different emoji");
     for (let keepGoing = 1; keepGoing < 420; keepGoing++) {
-      if (
-        emojis[emojiold.name + keepGoing.toString()] ==
-        `<${AnimatedStart}:${emojiold.name}:${emojiold.id}>`
-      ) {
+      if (emojis[emojiold.name + keepGoing.toString()] == `<${AnimatedStart}:${emojiold.name}:${emojiold.id}>`) {
         delete emojis[emojiold.name + keepGoing.toString()];
         break;
       }
     }
   } else if (!(emojiold.name in emojis)) {
-    if (
-      emojiupd.name in emojis &&
-      emojis[emojiupd.name] ==
-        `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`
-    ) {
+    if (emojiupd.name in emojis && emojis[emojiupd.name] == `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`) {
       //console.log("[Testing]".bgYellow.white, "Case 3-1: New name is in json and already has correct value");
       return; // this one should also never pass
-    } else if (
-      emojiupd.name in emojis &&
-      emojis[emojiupd.name] !=
-        `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`
-    ) {
+    } else if (emojiupd.name in emojis && emojis[emojiupd.name] !=  `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`) {
       //console.log("[Testing]".bgYellow.white, "Case 3-2: New name is already in json and has other value");
       for (let keepGoing = 1; keepGoing < 420; keepGoing++) {
         if (!(emojiupd.name + keepGoing.toString() in emojis)) {
-          emojis[
-            emojiupd.name + keepGoing.toString()
-          ] = `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`;
+          emojis[emojiupd.name + keepGoing.toString()] = `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`;
           break;
         }
       }
     } else {
       //console.log("[Testing]".bgYellow.white, "Case 3-3: Emoji is not in json");
-      emojis[
-        emojiupd.name
-      ] = `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`;
+      emojis[emojiupd.name] = `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`;
       console.log(
         "[New Emoji]".bgMagenta,
         `<${emojiupd.guild.name}/${emojiupd.guild.id}>`.cyan,
@@ -218,6 +195,8 @@ bot.on("message", async message => {
   var channel = message.channel;
   var msg = message.content;
   var words = msg.split(" ");
+  
+
 
   if (words[0] == Config["prefix"] + "memes") {
     var listomemes = "";
@@ -244,6 +223,7 @@ bot.on("message", async message => {
         }
       }
     }
+    
     for (var loops = startpos; loops < Object.keys(memes).length; loops++) {
       if (loops >= startpos + 10 || loops >= Object.keys(memes).length) {
         break;
@@ -326,6 +306,8 @@ bot.on("message", async message => {
           " | Use ?emojis [page #]"
       );
     return channel.send(embeded);
+    
+    
   } else if (words[0] == Config["prefix"] + "help") {
     return channel.send(
       new Discord.MessageEmbed()
@@ -380,13 +362,20 @@ bot.on("message", async message => {
 
     if (memes[msg.replace(/ /g, "_").replace(/\|/g, "")]) {
       var JSONMeme = memes[msg.replace(/ /g, "_").replace(/\|/g, "")];
-      if (typeof JSONMeme == "object") {
-        message.inlineReply(JSONMeme[Math.floor(Math.random() * JSONMeme.length)]);
-      } else {
-        message.inlineReply(JSONMeme);
+        
+      if(message.reference != null){
+        message.channel.messages.fetch(message.reference["messageID"]).then(msgReply => {
+          if(typeof JSONMeme == "object") return msgReply.inlineReply(`From ${message.author}\n`,{files: [JSONMeme[Math.floor(Math.random() * JSONMeme.length)]]});
+          if(JSONMeme.endsWith(".mp4")) return msgReply.inlineReply(`From ${message.author}\n`,{files: [JSONMeme]}); // will not work if mp4 is in an array
+          if(typeof JSONMeme == "string") return msgReply.inlineReply(`From ${message.author}\n`+JSONMeme);  
+        });
+      }else{
+        if(typeof JSONMeme == "object") return message.inlineReply(" ",{files: [JSONMeme[Math.floor(Math.random() * JSONMeme.length)]]});
+        if(JSONMeme.endsWith(".mp4")) return message.inlineReply(" ",{files: [JSONMeme]});
+        if(typeof JSONMeme == "string") return message.inlineReply(JSONMeme);  
       }
     } else {
-      channel.send("I couldn't find that meme in my database.");
+      return channel.send("I couldn't find that meme in my database.");
     }
     
     
@@ -492,6 +481,15 @@ bot.on("message", async message => {
   }
 });
 
+
+/*
+
+Functions
+
+*/
+
+
+
 function SaveJSON(file) {
   if (file == 0) {
     fs.writeFile("memeages.json", JSON.stringify(memes), err => {
@@ -503,6 +501,7 @@ function SaveJSON(file) {
     });
   }
 }
+
 
 function ReloadServerEmojis(server) {
   let FoundEmojis = 0;
