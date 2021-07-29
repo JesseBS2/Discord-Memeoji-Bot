@@ -104,34 +104,31 @@ bot.on("emojiUpdate", (emojiold, emojiupd) => {
   var AnimatedStart = "";
   if (emojiold.animated && emojiupd.animated) AnimatedStart = "a";
 
-  if (
-    emojiold.name in emojis &&
-    emojis[emojiold.name] ==
-      `<${AnimatedStart}:${emojiold.name}:${emojiold.id}>`
-  ) {
-    //console.log("[Testing]".bgYellow.white, "Case 1: Emoji is already in json and has same value");
-    delete emojis[
-      Object.keys(emojis)[
-        Object.values(emojis).indexOf(
-          `<${AnimatedStart}:${emojiold.name}:${emojiold.id}>`
-        )
-      ]
-    ];
+  if (emojiold.name in emojis && emojis[emojiold.name] == `<${AnimatedStart}:${emojiold.name}:${emojiold.id}>`) {
+    console.log("[Testing]".bgYellow.white, "Case 1: Emoji is already in json and has same value");
+    delete emojis[Object.keys(emojis)[Object.values(emojis).indexOf(
+        `<${AnimatedStart}:${emojiold.name}:${emojiold.id}>`
+      )]];
     emojis[emojiupd.name] = `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`;
   } else if (emojiold.name in emojis && emojis[emojiold.name] != `<${AnimatedStart}:${emojiold.name}:${emojiold.id}>`) {
-    //console.log("[Testing]".bgYellow.white, "Case 2: emoji name is in json but is different emoji");
+    
+    console.log("[Testing]".bgYellow.white, "Case 2: emoji name is in json but is different emoji");
     for (let keepGoing = 1; keepGoing < 420; keepGoing++) {
       if (emojis[emojiold.name + keepGoing.toString()] == `<${AnimatedStart}:${emojiold.name}:${emojiold.id}>`) {
         delete emojis[emojiold.name + keepGoing.toString()];
-        break;
+        emojis[emojiupd.name + keepGoing.toString()] = `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`
+        return console.log("[Testing]","it was the old");
+      }else if(!emojis[emojiold.name + keepGoing.toString()]){
+        emojis[emojiupd.name + keepGoing.toString()] = `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`;
+        return console.log("[Testing]","it didn't exist");
       }
     }
   } else if (!(emojiold.name in emojis)) {
     if (emojiupd.name in emojis && emojis[emojiupd.name] == `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`) {
-      //console.log("[Testing]".bgYellow.white, "Case 3-1: New name is in json and already has correct value");
+      console.log("[Testing]".bgYellow.white, "Case 3-1: New name is in json and already has correct value");
       return; // this one should also never pass
-    } else if (emojiupd.name in emojis && emojis[emojiupd.name] !=  `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`) {
-      //console.log("[Testing]".bgYellow.white, "Case 3-2: New name is already in json and has other value");
+    } else if (emojiupd.name in emojis && emojis[emojiupd.name] != `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`) {
+      console.log("[Testing]".bgYellow.white, "Case 3-2: New name is already in json and has other value");
       for (let keepGoing = 1; keepGoing < 420; keepGoing++) {
         if (!(emojiupd.name + keepGoing.toString() in emojis)) {
           emojis[emojiupd.name + keepGoing.toString()] = `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`;
@@ -139,9 +136,9 @@ bot.on("emojiUpdate", (emojiold, emojiupd) => {
         }
       }
     } else {
-      //console.log("[Testing]".bgYellow.white, "Case 3-3: Emoji is not in json");
+      console.log("[Testing]".bgYellow.white, "Case 3-3: Emoji is not in json");
       emojis[emojiupd.name] = `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`;
-      console.log(
+      return console.log(
         "[New Emoji]".bgMagenta,
         `<${emojiupd.guild.name}/${emojiupd.guild.id}>`.cyan,
         `Added :${emojiupd.name.toString().yellow}: ${
@@ -383,7 +380,9 @@ bot.on("message", async message => {
     let emojiwrappers = msg.split(Config["emoji-wrapper"]);
     var ToSend = "";
     var QueuedEmojis = [];
-
+    
+    if(emojiwrappers.length == 2)return; // there's only one semicolon so it's not an emoji(it wouldn't send anyway but this way it doesn't throw an error)
+    
     for (var semicolons = 1; semicolons < emojiwrappers.length; semicolons += 2 ) {
       
       if(emojiwrappers.length % 2 == 0){
