@@ -99,39 +99,35 @@ bot.on("emojiCreate", newemoji => {
 });
 
 
-
 bot.on("emojiUpdate", (emojiold, emojiupd) => {
   var AnimatedStart = "";
   if (emojiold.animated && emojiupd.animated) AnimatedStart = "a";
 
-  if (
-    emojiold.name in emojis &&
-    emojis[emojiold.name] ==
-      `<${AnimatedStart}:${emojiold.name}:${emojiold.id}>`
-  ) {
-    //console.log("[Testing]".bgYellow.white, "Case 1: Emoji is already in json and has same value");
-    delete emojis[
-      Object.keys(emojis)[
-        Object.values(emojis).indexOf(
-          `<${AnimatedStart}:${emojiold.name}:${emojiold.id}>`
-        )
-      ]
-    ];
+  if (emojiold.name in emojis && emojis[emojiold.name] == `<${AnimatedStart}:${emojiold.name}:${emojiold.id}>`) {
+    console.log("[Testing]".bgYellow.white, "Case 1: Emoji is already in json and has same value");
+    delete emojis[Object.keys(emojis)[Object.values(emojis).indexOf(
+        `<${AnimatedStart}:${emojiold.name}:${emojiold.id}>`
+      )]];
     emojis[emojiupd.name] = `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`;
   } else if (emojiold.name in emojis && emojis[emojiold.name] != `<${AnimatedStart}:${emojiold.name}:${emojiold.id}>`) {
-    //console.log("[Testing]".bgYellow.white, "Case 2: emoji name is in json but is different emoji");
+    
+    console.log("[Testing]".bgYellow.white, "Case 2: emoji name is in json but is different emoji");
     for (let keepGoing = 1; keepGoing < 420; keepGoing++) {
       if (emojis[emojiold.name + keepGoing.toString()] == `<${AnimatedStart}:${emojiold.name}:${emojiold.id}>`) {
         delete emojis[emojiold.name + keepGoing.toString()];
-        break;
+        emojis[emojiupd.name + keepGoing.toString()] = `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`
+        return console.log("[Testing]","it was the old");
+      }else if(!emojis[emojiold.name + keepGoing.toString()]){
+        emojis[emojiupd.name + keepGoing.toString()] = `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`;
+        return console.log("[Testing]","it didn't exist");
       }
     }
   } else if (!(emojiold.name in emojis)) {
     if (emojiupd.name in emojis && emojis[emojiupd.name] == `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`) {
-      //console.log("[Testing]".bgYellow.white, "Case 3-1: New name is in json and already has correct value");
+      console.log("[Testing]".bgYellow.white, "Case 3-1: New name is in json and already has correct value");
       return; // this one should also never pass
-    } else if (emojiupd.name in emojis && emojis[emojiupd.name] !=  `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`) {
-      //console.log("[Testing]".bgYellow.white, "Case 3-2: New name is already in json and has other value");
+    } else if (emojiupd.name in emojis && emojis[emojiupd.name] != `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`) {
+      console.log("[Testing]".bgYellow.white, "Case 3-2: New name is already in json and has other value");
       for (let keepGoing = 1; keepGoing < 420; keepGoing++) {
         if (!(emojiupd.name + keepGoing.toString() in emojis)) {
           emojis[emojiupd.name + keepGoing.toString()] = `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`;
@@ -139,9 +135,9 @@ bot.on("emojiUpdate", (emojiold, emojiupd) => {
         }
       }
     } else {
-      //console.log("[Testing]".bgYellow.white, "Case 3-3: Emoji is not in json");
+      console.log("[Testing]".bgYellow.white, "Case 3-3: Emoji is not in json");
       emojis[emojiupd.name] = `<${AnimatedStart}:${emojiupd.name}:${emojiupd.id}>`;
-      console.log(
+      return console.log(
         "[New Emoji]".bgMagenta,
         `<${emojiupd.guild.name}/${emojiupd.guild.id}>`.cyan,
         `Added :${emojiupd.name.toString().yellow}: ${
@@ -205,15 +201,17 @@ bot.on("message", async message => {
       .setDescription(
         "Use `" +
           Config["meme-wrapper"] +
-          "` on both sides of the meme name send it"
+          "` on both sides of the meme name send it"+
+        "\nUse `?memes #number` to jump to another page of memes"
       );
     let startpos = 0;
 
     if (words[1] && Number(words[1])) {
       //skips further into the list
-      startpos = Number(words[1]) * 10;
+      startpos = (Number(words[1])-1) * 10;
       if (startpos > Object.keys(memes).length) {
         // start at the end and work backwards
+        startpos = Object.keys(memes).length; // this ensures it just display the last list. Removing this line makes going over inconsistent and weird
         for (var i = startpos; i > 0; i--) {
           if (i <= startpos - 10) {
             // once it reaches the maximum length, hit stop.
@@ -225,13 +223,17 @@ bot.on("message", async message => {
     }
     
     for (var loops = startpos; loops < Object.keys(memes).length; loops++) {
-      if (loops >= startpos + 10 || loops >= Object.keys(memes).length) {
+      if (loops > startpos + 10 || loops >= Object.keys(memes).length) {
         break;
       } else {
         listomemes += Object.keys(memes)[loops] + "\n";
       }
     }
 
+    if(listomemes == ""){
+      return message.inlineReply("So ou")
+    }
+    
     let theFooterLol = 0;
     if (startpos / 10 == 0.1) {
       theFooterLol = 1;
@@ -241,10 +243,7 @@ bot.on("message", async message => {
     embeded
       .addField("_______", listomemes)
       .setFooter(
-        theFooterLol +
-          " of " +
-          Math.ceil(Object.keys(memes).length / 10) +
-          " | Use ?memes [page #]"
+        `Showing memes ${startpos+1} to ${startpos+(listomemes.split("\n").length-2)} (Page ${theFooterLol} of ${Math.ceil(Object.keys(memes).length / 10)})`
       );
 
     return channel.send(embeded);
@@ -313,7 +312,7 @@ bot.on("message", async message => {
       new Discord.MessageEmbed()
         .setTitle("Memeinator Help Menu")
         .setDescription(
-          "Discord Memeinator Bot\nInvite to your server: https://discord.com/api/oauth2/authorize?client_id=813201447101005875&permissions=1074130112&scope=bot \n\nUse this bot just like how you use emojis. To use a meme enter in the name with `" +
+          "Discord Memeinator Bot\n Click [here](https://discord.com/api/oauth2/authorize?client_id=813201447101005875&permissions=1074130112&scope=bot) to invite me to your server  \n\nUse this bot just like how you use emojis. To use a meme enter in the name with `" +
             Config["meme-wrapper"] +
             "` on either side, example: `" +
             Config["meme-wrapper"] +
@@ -325,7 +324,7 @@ bot.on("message", async message => {
             Config["emoji-wrapper"] +
             "MaBoiHere" +
             Config["emoji-wrapper"] +
-            "`\n*Using emojis is case sensitive*"
+            "`\n*Using emojis is case sensitive*\n`"
         )
         .addField(
           "?memes",
@@ -383,7 +382,9 @@ bot.on("message", async message => {
     let emojiwrappers = msg.split(Config["emoji-wrapper"]);
     var ToSend = "";
     var QueuedEmojis = [];
-
+    
+    if(emojiwrappers.length == 2)return; // there's only one semicolon so it's not an emoji(it wouldn't send anyway but this way it doesn't throw an error)
+    
     for (var semicolons = 1; semicolons < emojiwrappers.length; semicolons += 2 ) {
       
       if(emojiwrappers.length % 2 == 0){
@@ -503,6 +504,12 @@ function SaveJSON(file) {
 }
 
 
+
+
+
+/*
+  Needs to have a version to reload ALL emojis, and delete any emojis in the json that aren't in a server.
+*/
 function ReloadServerEmojis(server) {
   let FoundEmojis = 0;
 
